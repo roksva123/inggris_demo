@@ -63,41 +63,27 @@ Untuk development frontend dengan Vite, jalankan `npm run dev` dari folder `fron
 - `POST /api/trial` dengan body `{ "name": "...", "phone": "...", "grade": "...", "program": "..." }`
 - `GET /healthz` untuk health check
 
-## Deploy ke Vercel + Render
+## Deploy frontend + backend ke Vercel
 
-Vercel cocok untuk frontend Vite, tetapi tidak menjalankan container Docker/HTTP server Go seperti `Dockerfile` di root. Karena itu deploy dibuat dua bagian:
-
-### 1. Deploy backend Go ke Render
-
-Ikuti langkah Render di bawah. Setelah berhasil, catat URL backend, misalnya `https://demo-inggris-api.onrender.com`.
+Backend Go sudah disiapkan sebagai satu Vercel Serverless Function di `api/index.go`. Frontend dan API dapat dideploy dari repository yang sama tanpa Render.
 
 1. Push repository ke GitHub.
-2. Di Render pilih **New Web Service**.
-3. Pilih repository ini.
-4. Runtime: **Docker**.
-5. Root Directory: kosongkan.
-6. Dockerfile Path: `./Dockerfile`.
-7. Instance: **Free**.
-8. Region: **Singapore**.
-9. Environment variables: tidak diperlukan.
-10. Deploy service.
+2. Di Vercel pilih **Add New → Project**, lalu import repository ini.
+3. **Root Directory:** pilih root repository (`.`), jangan `frontend`.
+4. **Framework Preset:** Vite.
+5. **Build Command:** `cd frontend && npm run build`.
+6. **Output Directory:** `frontend/dist`.
+7. **Install Command:** `cd frontend && npm install`.
+8. Tidak perlu mengisi `VITE_API_URL`; frontend akan memakai API relatif `/api`.
+9. Klik **Deploy**.
 
-Dockerfile di root membangun frontend Vite, mengompilasi backend Go, lalu menjalankan satu container yang melayani halaman static dan API. Render akan memberikan nilai `PORT`; container juga memiliki default `10000`.
+Endpoint yang tersedia:
 
-### 2. Deploy frontend ke Vercel
+- `GET /api/programs`
+- `GET /api/testimonials`
+- `GET /api/tutors`
+- `GET /api/stats`
+- `POST /api/trial`
+- `GET /healthz`
 
-1. Buka [vercel.com](https://vercel.com), login, lalu pilih **Add New → Project**.
-2. Import repository GitHub ini.
-3. Pada **Root Directory**, pilih `frontend`.
-4. Framework Preset: **Vite**.
-5. Build Command: `npm run build`.
-6. Output Directory: `dist`.
-7. Tambahkan Environment Variable:
-   - Name: `VITE_API_URL`
-   - Value: URL backend Render, contoh `https://demo-inggris-api.onrender.com`
-   - Environment: Production (boleh centang Preview juga)
-8. Klik **Deploy**.
-
-Kode frontend menggunakan `VITE_API_URL` untuk memanggil API backend. Jika variabel ini kosong, frontend memakai URL relatif `/api`, yang tetap cocok untuk deployment satu server seperti Docker/Render.
-
-> Jika mengubah `VITE_API_URL` setelah deploy, lakukan **Redeploy** karena nilai `VITE_*` dimasukkan saat proses build frontend.
+`POST /api/trial` saat ini hanya mencatat data ke log Vercel dan tidak menyimpan data secara permanen. Untuk penyimpanan formulir, tambahkan database atau layanan email.

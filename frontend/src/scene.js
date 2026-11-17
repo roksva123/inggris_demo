@@ -3,7 +3,7 @@ import gsap from 'gsap'
 
 const palette = { cream: 0xf4efe6, forest: 0x1f3d2b, tomato: 0xff5a36, mustard: 0xf2b705, ink: 0x14110f }
 
-const createMaterial = (color) => new THREE.MeshToonMaterial({ color, flatShading: true, transparent: true, opacity: 0.9 })
+const createMaterial = (color) => new THREE.MeshToonMaterial({ color, transparent: true, opacity: 0.9 })
 
 const setAppearance = (object, opacity, scale) => {
   object.traverse((child) => {

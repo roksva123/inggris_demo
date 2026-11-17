@@ -79,7 +79,7 @@ const setupPreloader = () => {
 }
 
 const setupSmoothScroll = () => {
-  if (prefersReduced) return
+  if (prefersReduced || matchMedia('(hover: none)').matches) return
   lenis = new Lenis({ duration: 1.15, smoothWheel: true })
   lenis.on('scroll', ScrollTrigger.update)
   lenisTicker = (time) => lenis?.raf(time * 1000)
@@ -197,6 +197,9 @@ const setupTrialForm = () => {
   const success = $('#trial-success')
   if (!form || !error || !success || form.dataset.ready === 'true') return
   form.dataset.ready = 'true'
+  $$('input, select', form).forEach((field) => field.addEventListener('focus', () => {
+    window.setTimeout(() => field.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120)
+  }))
   form.addEventListener('submit', async (event) => {
     event.preventDefault(); error.textContent = ''
     const payload = Object.fromEntries(new FormData(form).entries())
@@ -221,7 +224,10 @@ const cleanup = () => {
   lenis?.destroy()
   lenis = undefined
   lenisTicker = undefined
-  if (resizeHandler) removeEventListener('resize', resizeHandler)
+  if (resizeHandler) {
+    removeEventListener('resize', resizeHandler)
+    removeEventListener('orientationchange', resizeHandler)
+  }
   resizeHandler = undefined
 }
 
@@ -249,6 +255,7 @@ const init = async () => {
         }, 180)
       }
       addEventListener('resize', resizeHandler)
+      addEventListener('orientationchange', resizeHandler)
     } catch (error) {
       console.error(error)
       document.body.classList.add('api-error')

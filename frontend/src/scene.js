@@ -55,12 +55,13 @@ const makeShape = (kind, color) => {
 export const createScene = () => {
   const canvas = document.querySelector('#scene-canvas')
   if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { destroy: () => {} }
+  const isMobile = innerWidth < 768
   const scene = new THREE.Scene()
   scene.fog = new THREE.Fog(palette.cream, 14, 30)
   const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.1, 100)
   camera.position.set(0, 0.2, 8)
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+  renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2))
   renderer.setSize(innerWidth, innerHeight)
   renderer.outputColorSpace = THREE.SRGBColorSpace
   const ambient = new THREE.AmbientLight(0xfff7e8, 1.25)
@@ -68,14 +69,17 @@ export const createScene = () => {
   directional.position.set(3, 5, 6)
   scene.add(ambient, directional)
 
-  const objects = [
+  const objects = isMobile ? [
+    { mesh: makeBook(), position: [-2.75, 1.35, 0], scale: 0.58 },
+    { mesh: makePencil(), position: [2.75, 1.25, -0.4], scale: 0.52 },
+  ] : [
     { mesh: makeBook(), position: [-2.4, 1.2, 0], scale: 0.92 },
     { mesh: makePencil(), position: [2.4, 1.2, -0.4], scale: 0.85 },
     { mesh: makeShape('cube', palette.forest), position: [-2.7, -1.5, -0.2], scale: 0.8 },
     { mesh: makeShape('sphere', palette.tomato), position: [2.7, -1.2, -0.4], scale: 0.75 },
     { mesh: makeLightbulb(), position: [0, 1.8, -1], scale: 0.72 },
   ]
-  if (innerWidth > 650) {
+  if (!isMobile && innerWidth > 650) {
     objects.push({ mesh: makeShape('cube', palette.mustard), position: [-0.9, -1.6, -0.5], scale: 0.55 })
     objects.push({ mesh: makePencil(), position: [1.2, -1.7, -1], scale: 0.55 })
   }
@@ -116,10 +120,11 @@ export const createScene = () => {
   raf = requestAnimationFrame(tick)
 
   const onScroll = () => {
+    if (isMobile) return
     const progress = Math.min(scrollY / innerHeight, 4)
     gsap.to(camera.position, { z: 8 - progress * 0.4, duration: 0.8, overwrite: true })
     objects.forEach(({ mesh }, index) => gsap.to(mesh.rotation, { z: progress * (index % 2 ? -0.7 : 0.7), duration: 0.9, overwrite: true }))
   }
-  addEventListener('scroll', onScroll, { passive: true })
-  return { destroy: () => { cancelAnimationFrame(raf); removeEventListener('pointermove', onPointer); removeEventListener('resize', onResize); removeEventListener('visibilitychange', onVisibility); removeEventListener('scroll', onScroll); renderer.dispose() } }
+  if (!isMobile) addEventListener('scroll', onScroll, { passive: true })
+  return { destroy: () => { cancelAnimationFrame(raf); removeEventListener('pointermove', onPointer); removeEventListener('resize', onResize); removeEventListener('visibilitychange', onVisibility); if (!isMobile) removeEventListener('scroll', onScroll); renderer.dispose() } }
 }
